@@ -7,11 +7,11 @@ from lookalike.domain import Domain
 class TyposquatDetector(Detector):
     """Detect registrable labels that differ from a brand by one edit.
 
-    ``minimum_label _length`` is used to remove unecessary noise in detections
+    ``minimum_label_length`` is used to remove unnecessary noise in detections
     i.e. detecting bbq.com to be typosquatting bbc.co.uk
     """
 
-    def __init__(self, minimum_label_length: int = 3) -> None:
+    def __init__(self, minimum_label_length: int = 4) -> None:
         if minimum_label_length < 1:
             raise ValueError("minimum_label_length must be positive")
 
@@ -22,16 +22,28 @@ class TyposquatDetector(Detector):
         candidate: Domain,
         brand: Domain,
     ) -> Detection | None:
-        """Return a detection when the labels have distance exactly one."""
+        """Return a detection when any relevant label is one edit from the brand."""
         if len(brand.label) < self._minimum_label_length:
             return None
 
-        distance = damerau_levenshtein_distance(
-            candidate.label,
-            brand.label,
+        if self._is_typosquat_label(candidate.label, brand.label):
+            return Detection(detector="typosquat")
+
+        if any(self._is_typosquat_label(label, brand.label) for label in candidate.subdomains):
+            return Detection(detector="typosquat")
+
+        return None
+
+    @staticmethod
+    def _is_typosquat_label(
+        candidate_label: str,
+        brand_label: str,
+    ) -> bool:
+        """Return whether a candidate label is one edit from the brand label."""
+        return (
+            damerau_levenshtein_distance(
+                candidate_label,
+                brand_label,
+            )
+            == 1
         )
-
-        if distance != 1:
-            return None
-
-        return Detection(detector="typosquat")
