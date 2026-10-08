@@ -40,7 +40,7 @@ class Domain:
 
 
 def parse_domain(raw: str) -> Domain:
-    """Parse ``raw`` into a ``Domain``.
+    """Parse and normalise ``raw`` (ASCII) into a ``Domain``.
 
     Raises:
         InvalidDomainError: If the input is empty or is not a valid domain,

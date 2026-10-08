@@ -24,6 +24,14 @@ class BrandTokenDetector(Detector):
         return None
 
     @staticmethod
+    def _is_brand_domain_or_subdomain(
+        candidate: Domain,
+        brand: Domain,
+    ) -> bool:
+        """Return whether the candidate belongs to the brand's own domain."""
+        return candidate.label == brand.label and candidate.suffix == brand.suffix
+
+    @staticmethod
     def _brand_is_token(candidate_label: str, brand_label: str) -> bool:
         """Return whether a longer label contains the brand as a hyphen token."""
         return (
@@ -47,11 +55,3 @@ class BrandTokenDetector(Detector):
             subdomains[index : index + window_size] == brand_labels
             for index in range(len(subdomains) - window_size + 1)
         )
-
-    @staticmethod
-    def _is_brand_domain_or_subdomain(
-        candidate: Domain,
-        brand: Domain,
-    ) -> bool:
-        """Return whether the candidate belongs to the brand's own domain."""
-        return candidate.label == brand.label and candidate.suffix == brand.suffix
