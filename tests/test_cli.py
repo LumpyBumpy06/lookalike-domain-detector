@@ -319,3 +319,71 @@ def test_main_returns_usage_error_for_non_utf8_input(
     assert captured.out == ""
     assert captured.err == ""
     assert str(candidates) in caplog.text
+
+
+def test_main_returns_usage_error_for_empty_brands_file(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """main() returns the usage error code when no brands are provided."""
+    caplog.set_level(logging.ERROR)
+
+    brands = write_input_file(
+        tmp_path / "brands.txt",
+        "",
+    )
+    candidates = write_input_file(
+        tmp_path / "candidates.txt",
+        "paypall.com\n",
+    )
+
+    exit_code = main(
+        [
+            "--brands",
+            str(brands),
+            "--candidates",
+            str(candidates),
+        ]
+    )
+
+    captured = capsys.readouterr()
+
+    assert exit_code == EXIT_USAGE_ERROR
+    assert captured.out == ""
+    assert captured.err == ""
+    assert "brands file contains no valid domains" in caplog.text
+
+
+def test_main_returns_usage_error_when_brands_file_has_no_valid_domains(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """main() rejects a brands file containing no valid domain entries."""
+    caplog.set_level(logging.ERROR)
+
+    brands = write_input_file(
+        tmp_path / "brands.txt",
+        "# protected brands\n\nnot-a-domain\n",
+    )
+    candidates = write_input_file(
+        tmp_path / "candidates.txt",
+        "paypall.com\n",
+    )
+
+    exit_code = main(
+        [
+            "--brands",
+            str(brands),
+            "--candidates",
+            str(candidates),
+        ]
+    )
+
+    captured = capsys.readouterr()
+
+    assert exit_code == EXIT_USAGE_ERROR
+    assert captured.out == ""
+    assert captured.err == ""
+    assert "brands file contains no valid domains" in caplog.text

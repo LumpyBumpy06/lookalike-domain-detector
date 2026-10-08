@@ -68,6 +68,9 @@ def _run(
     brands_result = _read_input_file(brands_path, "brands")
     if brands_result is None:
         return EXIT_USAGE_ERROR
+    if not brands_result.domains:
+        LOGGER.error("brands file contains no valid domains")
+        return EXIT_USAGE_ERROR
 
     candidates_result = _read_input_file(candidates_path, "candidates")
     if candidates_result is None:
