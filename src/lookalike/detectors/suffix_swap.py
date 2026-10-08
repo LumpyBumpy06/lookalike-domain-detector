@@ -13,6 +13,6 @@ class SuffixSwapDetector(Detector):
     ) -> Detection | None:
         """Return a detection when the labels match but suffixes differ."""
         if candidate.label == brand.label and candidate.suffix != brand.suffix:
-            return Detection(detector="suffix-swap")
+            return Detection(detector="suffix_swap")
 
         return None

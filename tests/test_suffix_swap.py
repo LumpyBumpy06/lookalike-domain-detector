@@ -66,7 +66,7 @@ def test_detects_same_label_with_different_suffix(
     brand: Domain,
 ) -> None:
     assert detector.detect(candidate, brand) == Detection(
-        detector="suffix-swap",
+        detector="suffix_swap",
     )
 
 
