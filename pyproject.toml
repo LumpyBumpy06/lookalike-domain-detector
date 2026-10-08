@@ -8,9 +8,11 @@ dynamic = ["version"]
 description = "Flags newly registered domains that imitate protected brands."
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Rafi Nissim "}]
+authors = [{ name = "Rafi Nissim" }]
 dependencies = []
-# Add [project.scripts] when cli.py exists.
+
+[project.scripts]
+lookalike = "lookalike.cli:main"
 
 [project.optional-dependencies]
 dev = [

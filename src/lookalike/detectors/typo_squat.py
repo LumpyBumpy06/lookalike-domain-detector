@@ -7,7 +7,7 @@ from lookalike.domain import Domain
 class TyposquatDetector(Detector):
     """Detect registrable labels that differ from a brand by one edit.
 
-    ``minimum_label _length`` is used to remove unecessary noise in detections 
+    ``minimum_label _length`` is used to remove unecessary noise in detections
     i.e. detecting bbq.com to be typosquatting bbc.co.uk
     """
 
