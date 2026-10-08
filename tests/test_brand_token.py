@@ -152,7 +152,10 @@ def test_does_not_detect_non_brand_token(
     paypal: Domain,
     candidate: str,
 ) -> None:
-    assert detector.detect(
-        parse_domain(candidate),
-        paypal,
-    ) is None
+    assert (
+        detector.detect(
+            parse_domain(candidate),
+            paypal,
+        )
+        is None
+    )
