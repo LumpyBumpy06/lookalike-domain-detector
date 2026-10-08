@@ -121,7 +121,7 @@ def _report_skipped(source_name: str, result: InputParseResult) -> None:
     """Log the number of invalid input lines skipped from one source."""
     if result.skipped:
         LOGGER.warning(
-            "%s: skipped %d skipped unsupported or malformed domain line%s",
+            "%s: skipped %d unsupported or malformed domain line%s",
             source_name,
             result.skipped,
             "" if result.skipped == 1 else "s",
