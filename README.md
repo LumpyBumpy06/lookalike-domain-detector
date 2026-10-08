@@ -217,7 +217,7 @@ may be parsed incorrectly.
 
 For example, `paypal.com.br` is currently treated as label `com` with suffix `br`, so `paypa1.com.br` will not be detected as a lookalike of `paypal.com`.
 
-The long-term fix is to use a maintained Public Suffix List while keeping the choice about whether to include the private section deliberate.
+The long term fix is to use a maintained Public Suffix List.
 
 **No TLD validation.**
 
@@ -292,16 +292,6 @@ There is also no ranking or confidence score.
 
 Output is collected and sorted before it is printed, so the CLI is not streaming.
 
-### Scale
-
-The current pipeline compares every candidate with every brand.
-
-The typosquat detector is the expensive part because it calculates the full Damerau-Levenshtein distance even though it only needs to know whether the distance is one.
-
-A simple length check can skip pairs where the label lengths differ by more than one. A dedicated within-one-edit check could then avoid calculating the full distance matrix.
-
-The implementation is single-threaded and keeps candidates, de-duplication state and findings in memory. This is sufficient for the current scope, but would become a limitation for substantially larger datasets.
-
 ## Future work
 
 ### Scaling
@@ -309,9 +299,9 @@ The implementation is single-threaded and keeps candidates, de-duplication state
 * Index brands by label and suffix rather than comparing every candidate with every brand.
 * Group typosquat comparisons by label length.
 * Stream candidate input instead of keeping everything in memory.
-* Consider a deletion-neighbourhood index such as SymSpell or a BK-tree for larger brand sets.
+* Concurrently process candidates
 
-The current pairwise `Detector` interface is intentionally simple, so indexing would likely require a separate preparation layer or a change to the detector interface.
+The current `Detector` interface is intentionally simple, so indexing would likely require a separate indexing/preparation layer or a change to the detector interface.
 
 ### Detection quality
 
@@ -322,9 +312,9 @@ The current pairwise `Detector` interface is intentionally simple, so indexing w
 ### Precision and evaluation
 
 * Add per-brand allowlists for known legitimate domains.
-* Evaluate detector precision and recall against labelled benign and malicious domains.
+* Evaluate detector precision and recall against a labelled set of benign and malicious domains.
 * Use the results to tune heuristics such as `minimum_label_length`.
-* Add richer evidence to findings.
+* Add richer evidence to findings i.e. for typosquat which character/s and where.
 * Add property-based tests and fuzzing around domain parsing.
 
 ## Status
