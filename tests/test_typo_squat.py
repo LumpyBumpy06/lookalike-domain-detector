@@ -1,7 +1,7 @@
 import pytest
 
 from lookalike.detection import Detection
-from lookalike.detectors.typosquat import TyposquatDetector
+from lookalike.detectors.typo_squat import TyposquatDetector
 from lookalike.domain import Domain
 
 
