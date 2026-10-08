@@ -55,7 +55,7 @@ def test_detects_label_one_edit_away(
         pytest.param("payapl", "paypal", id="adjacent-transposition"),
     ],
 )
-def test_detects_subdomain_one_edit_away(
+def test_ignores_subdomain_one_edit_away(
     detector: TyposquatDetector,
     subdomain: str,
     brand_label: str,
@@ -66,9 +66,29 @@ def test_detects_subdomain_one_edit_away(
     )
     brand = make_domain(brand_label)
 
-    assert detector.detect(candidate, brand) == Detection(
-        detector="typosquat",
+    assert detector.detect(candidate, brand) is None
+
+
+@pytest.mark.parametrize(
+    ("subdomain", "brand_label"),
+    [
+        pytest.param("beta", "meta", id="beta-vs-meta"),
+        pytest.param("mail", "gmail", id="mail-vs-gmail"),
+        pytest.param("apply", "apple", id="apply-vs-apple"),
+    ],
+)
+def test_common_subdomain_words_are_not_false_positives(
+    detector: TyposquatDetector,
+    subdomain: str,
+    brand_label: str,
+) -> None:
+    candidate = make_domain(
+        "example",
+        subdomains=(subdomain,),
     )
+    brand = make_domain(brand_label)
+
+    assert detector.detect(candidate, brand) is None
 
 
 @pytest.mark.parametrize(
@@ -97,14 +117,6 @@ def test_detects_subdomain_one_edit_away(
             make_domain("paypal"),
             id="distance-greater-than-one",
         ),
-        pytest.param(
-            make_domain(
-                "evil",
-                subdomains=("paypa12",),
-            ),
-            make_domain("paypal"),
-            id="subdomain-distance-greater-than-one",
-        ),
     ],
 )
 def test_does_not_detect_non_typosquat(
@@ -118,8 +130,8 @@ def test_does_not_detect_non_typosquat(
 @pytest.mark.parametrize(
     "brand_label",
     [
-        pytest.param("bbc", id="three-character-brand"),
-        pytest.param("abc", id="three-character-brand"),
+        pytest.param("bbc", id="bbc-brand"),
+        pytest.param("abc", id="abc-brand"),
     ],
 )
 def test_ignores_brands_shorter_than_default_minimum(

@@ -7,6 +7,11 @@ from lookalike.domain import Domain
 class TyposquatDetector(Detector):
     """Detect registrable labels that differ from a brand by one edit.
 
+    Only the registrable label is compared. Subdomain labels are deliberately
+    ignored: they are usually short common words (``beta``, ``mail``, ``docs``),
+    so comparing them produces many false positives, e.g. ``beta.example.com``
+    against ``meta.com``.
+
     ``minimum_label_length`` is used to remove unnecessary noise in detections
     i.e. detecting bbq.com to be typosquatting bbc.co.uk
     """
@@ -22,14 +27,11 @@ class TyposquatDetector(Detector):
         candidate: Domain,
         brand: Domain,
     ) -> Detection | None:
-        """Return a detection when any relevant label is one edit from the brand."""
+        """Return a detection when the registrable label is one edit from the brand."""
         if len(brand.label) < self._minimum_label_length:
             return None
 
         if self._is_typosquat_label(candidate.label, brand.label):
-            return Detection(detector="typosquat")
-
-        if any(self._is_typosquat_label(label, brand.label) for label in candidate.subdomains):
             return Detection(detector="typosquat")
 
         return None
