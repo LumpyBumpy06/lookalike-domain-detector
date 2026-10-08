@@ -376,3 +376,46 @@ def test_parse_domain_rejects_domain_without_registrable_label() -> None:
 def test_parse_domain_rejects_domain_without_registrable_label_for_multipart_suffix() -> None:
     with pytest.raises(InvalidDomainError):
         parse_domain("co.uk")
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "expected"),
+    [
+        pytest.param(
+            "paypal.com",
+            "paypal.com",
+            True,
+            id="same-domain",
+        ),
+        pytest.param(
+            "paypal.com",
+            "login.paypal.com",
+            True,
+            id="domain-and-subdomain",
+        ),
+        pytest.param(
+            "login.paypal.com",
+            "foo.login.paypal.com",
+            True,
+            id="different-subdomains",
+        ),
+        pytest.param(
+            "paypal.com",
+            "paypal.net",
+            False,
+            id="different-suffix",
+        ),
+        pytest.param(
+            "paypal.com",
+            "example.com",
+            False,
+            id="different-label",
+        ),
+    ],
+)
+def test_same_registrable_as(
+    first: str,
+    second: str,
+    expected: bool,
+) -> None:
+    assert parse_domain(first).same_registrable_as(parse_domain(second)) is expected

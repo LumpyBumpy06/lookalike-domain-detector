@@ -128,8 +128,8 @@ def test_main_reports_skipped_invalid_lines(
     assert captured.out == "paypall.com -> paypal.com [typosquat]\n"
     assert captured.err == ""
 
-    assert "brands: skipped 1 invalid line" in caplog.text
-    assert "candidates: skipped 1 invalid line" in caplog.text
+    assert "brands: skipped 1 skipped unsupported or malformed domain line" in caplog.text
+    assert "candidates: skipped 1 skipped unsupported or malformed domain line" in caplog.text
 
 
 def test_main_returns_usage_error_when_brands_file_is_missing(

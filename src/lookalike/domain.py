@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 # SinglePart ones are already handled e.g. .com, .uk
@@ -37,6 +39,10 @@ class Domain:
     subdomains: tuple[str, ...]
     label: str
     suffix: str
+
+    def same_registrable_as(self, other: Domain) -> bool:
+        """Return whether two domains have the same registrable domain."""
+        return self.label == other.label and self.suffix == other.suffix
 
 
 def parse_domain(raw: str) -> Domain:

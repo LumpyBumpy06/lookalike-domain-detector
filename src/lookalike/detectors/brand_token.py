@@ -12,7 +12,7 @@ class BrandTokenDetector(Detector):
         brand: Domain,
     ) -> Detection | None:
         """Return a detection when the brand appears in a suspicious position."""
-        if self._is_brand_domain_or_subdomain(candidate, brand):
+        if candidate.same_registrable_as(brand):
             return None
 
         if self._brand_is_token(candidate.label, brand.label):
@@ -22,14 +22,6 @@ class BrandTokenDetector(Detector):
             return Detection(detector="brand_token")
 
         return None
-
-    @staticmethod
-    def _is_brand_domain_or_subdomain(
-        candidate: Domain,
-        brand: Domain,
-    ) -> bool:
-        """Return whether the candidate belongs to the brand's own domain."""
-        return candidate.label == brand.label and candidate.suffix == brand.suffix
 
     @staticmethod
     def _brand_is_token(candidate_label: str, brand_label: str) -> bool:

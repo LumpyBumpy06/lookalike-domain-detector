@@ -19,7 +19,7 @@ def run_pipeline(
 
     for candidate in candidate_domains:
         for brand in brand_domains:
-            if _is_brand_domain_or_subdomain(candidate, brand):
+            if candidate.same_registrable_as(brand):
                 continue
 
             detections: list[Detection] = []
@@ -47,11 +47,3 @@ def run_pipeline(
     )
 
     return tuple(findings)
-
-
-def _is_brand_domain_or_subdomain(
-    candidate: Domain,
-    brand: Domain,
-) -> bool:
-    """Return whether a candidate is the protected brand domain or its subdomain."""
-    return candidate.label == brand.label and candidate.suffix == brand.suffix
