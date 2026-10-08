@@ -58,12 +58,44 @@ def test_detects_hyphenated_brand_as_token(
     "candidate",
     [
         pytest.param(
+            "paypal.evil.com",
+            id="brand-as-subdomain",
+        ),
+        pytest.param(
+            "login-paypal.evil.com",
+            id="hyphenated-brand-as-subdomain",
+        ),
+        pytest.param(
+            "paypal-secure-login.evil.com",
+            id="brand-token-in-subdomain",
+        ),
+        pytest.param(
+            "foo.paypal.evil.com",
+            id="brand-subdomain-with-prefix",
+        ),
+    ],
+)
+def test_detects_brand_token_in_subdomain(
+    detector: BrandTokenDetector,
+    paypal: Domain,
+    candidate: str,
+) -> None:
+    assert detector.detect(
+        parse_domain(candidate),
+        paypal,
+    ) == Detection(detector="brand_token")
+
+
+@pytest.mark.parametrize(
+    "candidate",
+    [
+        pytest.param(
             "paypal.com.account-verify.net",
             id="brand-domain-as-subdomain-sequence",
         ),
         pytest.param(
             "foo.paypal.com.account-verify.net",
-            id="brand-domain-with-prefix-subdomain",
+            id="brand-domain-with-prefix",
         ),
     ],
 )
@@ -90,12 +122,16 @@ def test_detects_brand_domain_in_subdomain_sequence(
             id="brand-is-not-a-whole-token",
         ),
         pytest.param(
+            "paypa1.evil.com",
+            id="typosquat-is-not-brand-token",
+        ),
+        pytest.param(
             "paypal.com",
             id="brand-domain-itself",
         ),
         pytest.param(
             "login.paypal.com",
-            id="legitimate-brand-subdomain",
+            id="same-registrable-domain",
         ),
         pytest.param(
             "paypal.net",
@@ -116,10 +152,7 @@ def test_does_not_detect_non_brand_token(
     paypal: Domain,
     candidate: str,
 ) -> None:
-    assert (
-        detector.detect(
-            parse_domain(candidate),
-            paypal,
-        )
-        is None
-    )
+    assert detector.detect(
+        parse_domain(candidate),
+        paypal,
+    ) is None
