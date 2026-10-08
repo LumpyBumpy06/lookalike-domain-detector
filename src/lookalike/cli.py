@@ -93,12 +93,12 @@ def _read_input_file(
     """Read and parse one domain input file, logging read failures."""
     try:
         return _read_domains(path)
-    except OSError as exc:
+    except (OSError, UnicodeDecodeError) as exc:
         LOGGER.error(
             "unable to read %s file %s: %s",
             source_name,
             path,
-            exc.strerror or exc,
+            exc,
         )
         return None
 

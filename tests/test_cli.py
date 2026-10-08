@@ -287,3 +287,35 @@ def test_python_module_entry_point_works(
     assert result.returncode == EXIT_SUCCESS
     assert result.stdout == "paypall.com -> paypal.com [typosquat]\n"
     assert result.stderr == ""
+
+
+def test_main_returns_usage_error_for_non_utf8_input(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """main() returns the usage error code when an input file is not UTF-8."""
+    caplog.set_level(logging.ERROR)
+
+    brands = write_input_file(
+        tmp_path / "brands.txt",
+        "paypal.com\n",
+    )
+    candidates = tmp_path / "candidates.txt"
+    candidates.write_bytes(b"paypall.com\n\xe9\n")
+
+    exit_code = main(
+        [
+            "--brands",
+            str(brands),
+            "--candidates",
+            str(candidates),
+        ]
+    )
+
+    captured = capsys.readouterr()
+
+    assert exit_code == EXIT_USAGE_ERROR
+    assert captured.out == ""
+    assert captured.err == ""
+    assert str(candidates) in caplog.text
