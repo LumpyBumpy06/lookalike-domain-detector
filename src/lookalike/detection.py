@@ -5,7 +5,6 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Detection:
-    """A detector's result on one (candidate, brand) pair with its confidence score."""
+    """A detector's result on one (candidate, brand).  In future may contain risk assessment via a confidence score."""
 
     detector: str
-    score: float
