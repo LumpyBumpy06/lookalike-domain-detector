@@ -1,5 +1,3 @@
-"""Detectors: each detector decides whether a candidate imitates one brand in one way"""
-
 from dataclasses import dataclass
 
 from lookalike.domain import Domain

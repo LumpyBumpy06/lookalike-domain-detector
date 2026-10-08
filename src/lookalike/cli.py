@@ -85,7 +85,12 @@ def _run(
         detectors=default_detectors(),
     )
 
-    _write_output(findings, output_format)
+    # Catch error if piping output of CLI to head.
+    try:
+        _write_output(findings, output_format)
+    except BrokenPipeError:
+        return EXIT_SUCCESS
+
     return EXIT_SUCCESS
 
 
