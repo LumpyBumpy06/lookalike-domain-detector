@@ -24,7 +24,7 @@ class InvalidDomainError(ValueError):
     """Raised when a domain name is invalid."""
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class Domain:
     """A parsed, normalised domain, e.g. ``login.paypal.co.uk``.
 
