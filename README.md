@@ -147,6 +147,14 @@ Subdomains are mostly short, common words, and in a previous version it flagged 
 
 The trade off is that a misspelt brand in a subdomain, such as `paypa1.evil.com`, is no longer reported by `typosquat`. A correctly spelt brand in a subdomain (`paypal.evil.com`) is still caught by `brand_token`.
 
+### Typosquatting only checks the registrable label
+
+`typosquat` compares only the registrable label (the `paypal` in `login.paypal.com`), not subdomain labels.
+
+Subdomains are mostly short, common words, and in a previous version it flagged `beta.example.com` against `meta.com`, and `mail.example.com` against `gmail.com`.
+
+The trade off is that a misspelt brand in a subdomain, such as `paypa1.evil.com`, is no longer reported by `typosquat`. A correctly spelt brand in a subdomain (`paypal.evil.com`) is still caught by `brand_token`.
+
 ## Development
 
 Run:
@@ -199,7 +207,7 @@ Proper IDNA decoding and Unicode confusable analysis are not implemented.
 
 **Public suffix handling is incomplete.**
 
-The parser currently recognises these multi part suffixes as defined in ``domain.py``:
+The parser currently recognises these multi-part suffixes as defined in ``domain.py``:
 
 ```text
 co.uk
