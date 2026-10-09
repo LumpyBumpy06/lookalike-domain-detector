@@ -12,11 +12,11 @@ The tool only does string analysis. It does not check DNS, WHOIS, certificates, 
 
 ## Detectors
 
-| Detector      | Fires when                                                                                                                              | Example (`paypal.com`)                                                                    |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `typosquat`   | A candidate label is exactly one Damerau-Levenshtein edit from the brand label. The registrable label and subdomain labels are checked. | `paypa1.com`, `paypall.com`, `paypa.com`, `paypa1.evil.com`                               |
-| `brand_token` | The brand label appears as a whole hyphen-delimited token in the registrable label or in a subdomain label.                             | `paypal-login.com`, `secure-paypal-login.com`, `paypal.evil.com`, `login-paypal.evil.com` |
-| `suffix_swap` | The registrable label matches the brand label but the suffix is different.                                                              | `paypal.net`, `paypal.co.uk`, `paypal.xyz`                                                |
+| Detector      | Fires when                                                                                                                                      | Example (`paypal.com`)                                                                    |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `typosquat`   | The candidate's registrable label is exactly one Damerau Levenshtein edit from the brand label. Subdomain labels are deliberately not checked. | `paypa1.com`, `paypall.com`, `paypa.com`                                                  |
+| `brand_token` | The brand label appears as a whole hyphen delimited token in the registrable label or in a subdomain label.                                     | `paypal-login.com`, `secure-paypal-login.com`, `paypal.evil.com`, `login-paypal.evil.com` |
+| `suffix_swap` | The registrable label matches the brand label but the suffix is different.                                                                      | `paypal.net`, `paypal.co.uk`, `paypal.xyz`                                                |
 
 A candidate/brand pair can trigger more than one detector.
 
@@ -58,7 +58,7 @@ paypal.com
 bbc.co.uk
 ```
 
-The tool expects hostnames rather than URLs or other DNS-related forms. The following are rejected:
+The tool expects hostnames rather than URLs or other DNS related forms. The following are rejected:
 
 ```text
 https://example.com
@@ -73,12 +73,11 @@ Output is sorted by candidate and then brand, so repeated runs are deterministic
 ```text
 $ lookalike --brands brands.txt --candidates candidates.txt
 
+login-paypal.evil.com -> paypal.com [brand_token]
 paypa1.com -> paypal.com [typosquat]
 paypal-login.com -> paypal.com [brand_token]
-paypal.evil.com -> paypal.com [brand_token]
-login-paypal.evil.com -> paypal.com [brand_token]
-paypa1.evil.com -> paypal.com [typosquat]
 paypal.com.evil.com -> paypal.com [brand_token]
+paypal.evil.com -> paypal.com [brand_token]
 paypal.net -> paypal.com [suffix_swap]
 ```
 
@@ -115,7 +114,8 @@ src/lookalike/
 
   detectors/
     detector.py      Detector Protocol
-    typo_squat.py    TyposquatDetector and edit-distance implementation
+    typo_squat.py    TyposquatDetector
+    similarity.py    Damerau-Levenshtein distance
     brand_token.py   BrandTokenDetector
     suffix_swap.py   SuffixSwapDetector
     factory.py       default detector set
@@ -131,13 +131,21 @@ The package includes a `py.typed` marker and is checked with `mypy --strict`.
 
 The project has no runtime dependencies. This keeps it easy to run and keeps the implementation relatively small.
 
-The main trade-off is that some data, such as the public suffix list, has to be handled directly in the project.
+The main tradeoff is that some data, such as the public suffix list, has to be handled directly in the project.
 
 ### No risk scoring
 
 The tool currently only reports which detectors matched rather than assigning a risk/confidence score.
 
-This is deliberate: a domain-name match alone is not enough to determine whether a domain is malicious. For example, `paypal.de` may be a legitimate domain owned by the brand rather than an impersonation attempt.
+This is deliberate: a domain name match alone is not enough to determine whether a domain is malicious. For example, `paypal.de` may be a legitimate domain owned by the brand rather than an impersonation attempt.
+
+### Typosquatting only checks the registrable label
+
+`typosquat` compares only the registrable label (the `paypal` in `login.paypal.com`), not subdomain labels.
+
+Subdomains are mostly short, common words, and in a previous version it flagged `beta.example.com` against `meta.com`, and `mail.example.com` against `gmail.com`.
+
+The trade off is that a misspelt brand in a subdomain, such as `paypa1.evil.com`, is no longer reported by `typosquat`. A correctly spelt brand in a subdomain (`paypal.evil.com`) is still caught by `brand_token`.
 
 ## Development
 
@@ -189,9 +197,9 @@ are accepted as ordinary ASCII labels, but are not decoded.
 
 Proper IDNA decoding and Unicode confusable analysis are not implemented.
 
-**Public-suffix handling is incomplete.**
+**Public suffix handling is incomplete.**
 
-The parser currently recognises these multi-part suffixes:
+The parser currently recognises these multi part suffixes as defined in ``domain.py``:
 
 ```text
 co.uk
@@ -217,6 +225,8 @@ may be parsed incorrectly.
 
 For example, `paypal.com.br` is currently treated as label `com` with suffix `br`, so `paypa1.com.br` will not be detected as a lookalike of `paypal.com`.
 
+This will cause false positives. `amazon.com.br` is parsed as subdomain `amazon` on registrable label `com`, so it is reported as a `brand_token` match for `amazon.com`. `paypal.co.nz` is reported against `paypal.com` for the same reason.
+
 The long term fix is to use a maintained Public Suffix List.
 
 **No TLD validation.**
@@ -227,7 +237,7 @@ Any syntactically valid final label is accepted as a suffix. IP-like input such 
 
 **`brand_token` does not handle concatenated forms.**
 
-It looks for the brand label as a separate hyphen-delimited token.
+It looks for the brand label as a separate hyphen delimited token.
 
 These are detected:
 
@@ -246,9 +256,9 @@ paypallogin.com
 securepaypal.com
 ```
 
-**`typosquat` only looks for one edit.**
+**`typosquat` only looks for one edit, in the registrable label.**
 
-The detector uses Damerau-Levenshtein distance and reports labels that are exactly one edit away from the brand label.
+The detector uses Damerau-Levenshtein distance and reports registrable labels that are exactly one edit away from the brand label.
 
 This catches:
 
@@ -256,7 +266,6 @@ This catches:
 paypa1.com
 paypall.com
 paypa.com
-paypa1.evil.com
 ```
 
 but misses cases requiring two edits, such as:
@@ -268,11 +277,9 @@ g00gle.com
 faceb00k.com
 ```
 
-Keyboard adjacency, vowel substitutions and other specialised typo patterns are not modelled separately.
-
 ### Precision
 
-The default `minimum_label_length` is 4, so brands shorter than four characters are ignored by the typosquat detector. This reduces some noise from very short labels, but is a simple heuristic rather than one based on measured false-positive rates.
+The default `minimum_label_length` is 4, so brands shorter than four characters are ignored by the typosquat detector. This reduces some noise from very short labels, but is a simple heuristic rather than one based on measured false positive rates.
 
 Suffix swaps can also be legitimate. For example, `paypal.de` could simply be another domain owned by the brand. There is currently no allowlist for known legitimate domains.
 
@@ -305,9 +312,9 @@ The current `Detector` interface is intentionally simple, so indexing would like
 
 ### Detection quality
 
-* Replace the hand-maintained suffix list with a maintained Public Suffix List.
+* Replace the hand maintained suffix list with a maintained Public Suffix List.
 * Add IDNA and Unicode confusable handling.
-* Add keyboard-based, multi-edit and concatenated-form detectors.
+* Add keyboard adjacency, vowel substitutions, multiedit and concatenated form detectors.
 
 ### Precision and evaluation
 
